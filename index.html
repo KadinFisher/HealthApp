@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitness Tracker - Home</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; /* Full viewport height */
+            background-color: #f3f3f3; /* Light gray background */
+        }
+
+        .device-container {
+            width: 620px;
+            height: 928px;
+            border: 16px solid black; /* Ensure borders are visible */
+            border-radius: 40px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .header {
+            position: absolute; /* Fixes the header at the top */
+            left: 16px;
+            top: 16px;
+            width: calc(100% - 32px); /* Adjust width considering container padding */
+            background-color: #f3f3f3; /* Same background as body to blend in */
+            padding-top: 10px; /* Add some padding for spacing */
+            padding-bottom: 10px; /* Add padding for spacing */
+            border-bottom: 2px solid black; /* Visible bottom border for header */
+            border-top-left-radius: 40px;
+            border-top-right-radius: 40px;
+        }
+
+        .header h1 {
+            font-size: 36px; /* Default header size */
+            text-align: center;
+        }
+
+        .header h1 span {
+            color: orange; /* Orange color for "TRACKER" */
+        }
+
+        .device-screen {
+            width: 100%; 
+            height: calc(100% - 140px); 
+            display: flex;
+            flex-direction: column;
+            justify-content: center; 
+        }
+
+        h2 {
+            font-size: 24px; 
+            color: black; 
+            text-align: center;
+            padding-top: 75px;
+        }
+
+        .activity-card {
+            background-color: #ff7f50; 
+            padding: 20px; 
+            margin-top: 30px; 
+            margin-bottom: 20px; 
+            margin-left:auto ; 
+			margin-right:auto ; 
+			width :500px ;
+			border-radius :10px ;
+			color:black ;
+			text-align:center ;
+			cursor:pointer ;
+		}
+
+		.activity-card h3{
+			font-size :28px ;
+		}
+
+        .activity-card p{
+            font-size: 20px;
+        }
+
+		.bottom-nav{
+			display:flex ;
+			justify-content :space-between ;
+			position:absolute ;
+			bottom :0px ;
+			width :100% ;
+			height :150px ;
+			background-color:#a6a6a6 ;
+			border-bottom-left-radius :40px ;
+			border-bottom-right-radius :40px ;
+		}
+
+		.bottom-nav a{
+			flex-grow :1 ;
+		}
+
+		.bottom-nav button{
+			background-color:#a6a6a6 ;
+			color:black ;
+			border-left :1px solid black ;
+			border-bottom:none ;
+			width :100% ;
+			padding :20px ;
+			font-size :18px ;
+			height :100% ;
+		}
+
+		.bottom-nav button:first-child{
+			border-left:none ;/*No divider on first button*/
+		}
+
+    </style>
+</head>
+<body>
+
+<div class="device-container">
+      <!-- Header fixed at the top -->
+      <header class="header">
+          <h1>FITNESS <span>TRACKER</span></h1>
+      </header>
+
+      <!-- Main Content -->
+      <div class="device-screen">
+          <div id="root">
+              <div class="home-container">
+
+                  <!-- Personalized welcome message -->
+                  <h2 id="welcomeMessage">Welcome User!</h2>
+
+                  <!-- Activity Cards -->
+                  <div class="activity-card today" onclick="saveDateAndRedirect('today')">
+                      <h3>TODAY (<span id="todayDate"></span>)</h3>
+                      <p id="todayWorkoutName">Workout Name:</p>
+                      <p id="todayWorkoutTime">Exercise Time:</p>
+                  </div>
+
+                  <div class="activity-card yesterday" onclick="saveDateAndRedirect('yesterday')">
+                      <h3>YESTERDAY (<span id="yesterdayDate"></span>)</h3>
+                      <p id="yesterdayWorkoutName">Workout Name:</p>
+                      <p id="yesterdayWorkoutTime">Exercise Time:</p>
+                  </div>
+              </div>
+          </div>
+
+          <!-- Bottom Navigation -->
+          <nav class="bottom-nav">
+              <!-- Added Profile Button -->
+              <a href="profile.html"><button>PROFILE</button></a>
+              <a href="activity.html"><button>ACTIVITY</button></a>
+              <a href="progress.html"><button>PROGRESS</button></a>
+              <a href="social.html"><button>SOCIAL</button></a>
+          </nav>
+
+      </div>
+    </div>
+
+<script>
+// Function to load user settings from localStorage and update the welcome message
+function loadUserSettings() {
+    // localStorage.clear();
+    const name = localStorage.getItem('name'); // Get the user's name from localStorage
+
+    // If a name is found in localStorage, use it. Otherwise, default to "User".
+    const welcomeMessage = document.getElementById('welcomeMessage');
+    if (name) {
+      welcomeMessage.textContent = `Welcome ${name}!`; // Display "Welcome {name}"
+    } else {
+      welcomeMessage.textContent = 'Welcome User!'; // Default to "Welcome User"
+    }
+}
+
+// Function to get today's and yesterday's date
+function loadDates() {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    // Format dates as MM/DD/YYYY
+    const options = { month:'2-digit', day:'2-digit', year:'numeric' };
+    
+    const todayFormatted = today.toLocaleDateString('en-US', options);
+    const yesterdayFormatted = yesterday.toLocaleDateString('en-US', options);
+
+    // Set the dates in the HTML
+    document.getElementById('todayDate').textContent = todayFormatted;
+    document.getElementById('yesterdayDate').textContent = yesterdayFormatted;
+
+    return { todayFormatted, yesterdayFormatted };
+}
+
+// Function to calculate total workout time based on exercises stored in localStorage
+function calculateTotalTime(exercises) {
+    let totalMinutes = exercises.reduce((total, exercise) => {
+        if (exercise.time) {
+          return total + exercise.time; // Convert hours and minutes to total minutes
+        }
+        return total;
+    }, 0);
+
+    // Convert total minutes back to hours and minutes
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    return `${hours}h ${minutes}m`;
+}
+
+// Function to load workout details (name and time) from localStorage for a given date
+function loadWorkoutDetails(dateKey, workoutNameElementId, workoutTimeElementId) {
+    const workoutName = localStorage.getItem(`${dateKey}WorkoutName`) || `${dateKey} Workout`;
+    
+    // Retrieve exercises from localStorage
+    const exercises = JSON.parse(localStorage.getItem(dateKey)) || [];
+    
+    // Calculate total workout time
+    const totalTimeWorkedOut = calculateTotalTime(exercises);
+
+    // Update HTML elements with workout details
+    document.getElementById(workoutNameElementId).textContent = `Workout Name: ${workoutName}`;
+    document.getElementById(workoutTimeElementId).textContent = `Exercise Time: ${totalTimeWorkedOut}`;
+}
+
+// Function to save date to localStorage and redirect to workout.html
+function saveDateAndRedirect(day) {
+    const { todayFormatted, yesterdayFormatted } = loadDates();
+    
+    if (day === 'today') {
+        localStorage.setItem('selectedDate', todayFormatted);
+    } else if (day === 'yesterday') {
+        localStorage.setItem('selectedDate', yesterdayFormatted);
+    }
+    localStorage.setItem('cameFromActivity', 'false')
+    window.location.href = 'workout.html'; // Redirect to workout page
+}
+
+// Load user settings, dates, and workout details when the page loads
+window.onload = function() {
+    loadUserSettings();
+    
+    const { todayFormatted, yesterdayFormatted } = loadDates();
+
+    // Load workout details for today and yesterday
+    loadWorkoutDetails(todayFormatted, 'todayWorkoutName', 'todayWorkoutTime');
+    loadWorkoutDetails(yesterdayFormatted, 'yesterdayWorkoutName', 'yesterdayWorkoutTime');
+};
+
+</script>
+
+</body>
+</html>

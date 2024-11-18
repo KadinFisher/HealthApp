@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitness Tracker - Activity</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; 
+            background-color: #f3f3f3; 
+        }
+
+        .device-container {
+            width: 620px;
+            height: 928px;
+            border: 16px solid black; 
+            border-radius: 40px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .device-screen {
+            width: calc(100% - 32px); 
+            height: calc(100% - 80px);
+        }
+
+        .activity-container {
+            padding: 20px;
+            height: calc(100% - 80px); 
+            overflow-y: auto; 
+        }
+
+        .streak-header {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 28px;
+        }
+
+        .workout-table {
+            width: calc(100% - 40px);
+            margin-bottom: 20px;
+            border-collapse: collapse; 
+        }
+
+        .workout-table th, .workout-table td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid black; 
+        }
+
+        .workout-table th {
+            background-color: #ff7f50; 
+            color: white;
+        }
+
+        .workout-table td {
+            background-color: #f3f3f3;
+        }
+
+        .back-btn {
+           position:absolute ; 
+           top :40px ; 
+           left :20px ; 
+           cursor:pointer ;
+       }
+       .back-btn img{
+		   width :24px ;
+	   }
+
+    </style>
+</head>
+<body>
+
+<div class="device-container">
+      <div class="device-screen">
+          <!-- Back Button (same as profile.html) -->
+          <a href="index.html" class="back-btn">
+              <!-- Back Icon -->
+              <img src="back-button.png" alt="Back" />
+          </a>
+
+          <!-- Activity Container -->
+          <div class="activity-container">
+              <!-- Header -->
+              <h2>Activity</h2>
+
+              <!-- Streak Header -->
+              <h2 class="streak-header" id="streakHeader">Streak: X Days</h2>
+
+              <!-- Workout History Table -->
+              <table class="workout-table">
+                  <thead>
+                      <tr>
+                          <th>Date</th>
+                          <th>Workout Name</th>
+                          <th>Exercise Time (minutes)</th>
+                      </tr>
+                  </thead>
+                  <tbody id="workoutTableBody">
+                      <!-- Rows will be dynamically added here -->
+                  </tbody>
+              </table>
+
+          </div>
+
+      </div>
+
+</div>
+
+<script>
+
+function calculateStreak() {
+
+    const streak = localStorage.getItem('streak') || '0';
+    document.getElementById('streakHeader').textContent = `Streak: ${streak} Days`;
+}
+
+function formatDate(date) {
+    return date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+}
+
+
+function getLastFiveDaysWorkouts() {
+    const workouts = [];
+    const today = new Date();
+
+
+    for (let i = 0; i < 5; i++) {
+        const currentDate = new Date(today);
+        currentDate.setDate(today.getDate() - i); 
+
+        const formattedDate = formatDate(currentDate);
+        const workoutName = localStorage.getItem(`${formattedDate}WorkoutName`) || `${formattedDate} Workout`;
+        
+        const exercises = JSON.parse(localStorage.getItem(formattedDate)) || [];
+        
+        let totalMinutes = exercises.reduce((total, exercise) => {
+            if (exercise.time) {
+              return total + exercise.time;
+            }
+            return total;
+        }, 0);
+
+        workouts.push({
+            date: formattedDate,
+            workoutName: workoutName,
+            exerciseTime: totalMinutes
+        });
+    }
+
+    return workouts;
+}
+
+
+function loadWorkoutHistory() {
+    const workoutTableBody = document.getElementById('workoutTableBody');
+
+
+    const workoutHistory = getLastFiveDaysWorkouts();
+
+
+    const sortedWorkouts = workoutHistory.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+
+
+    sortedWorkouts.forEach(workout => {
+        const newRow = `
+          <tr>
+              <td>${workout.date}</td>
+              <td><a href="workout.html" onclick="saveSelectedDate('${workout.date}')">${workout.workoutName}</a></td>
+              <td>${workout.exerciseTime}</td>
+          </tr>`;
+        workoutTableBody.insertAdjacentHTML('beforeend', newRow);
+    });
+}
+
+function saveSelectedDate(date) {
+    localStorage.setItem('selectedDate', date);
+    localStorage.setItem('cameFromActivity', 'true');
+}
+
+
+window.onload = function() {
+    calculateStreak();
+    loadWorkoutHistory();
+};
+</script>
+
+</body>
+</html>

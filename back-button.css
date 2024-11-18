@@ -1,0 +1,11 @@
+.back-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background-color: transparent;
+    border: none;
+}
+
+.back-btn img {
+    width: 24px; /* Adjust size as needed */
+}

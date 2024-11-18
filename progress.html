@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitness Tracker - Progress</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f3f3f3;
+        }
+
+        .device-container {
+            width: 620px;
+            height: 928px;
+            border: 16px solid black;
+            border-radius: 40px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .device-screen {
+            width: calc(100% - 32px);
+            height: calc(100% - 80px);
+        }
+
+        .progress-container {
+            padding: 20px;
+            height: calc(100% - 80px);
+            overflow-y: auto;
+        }
+
+        .streak-header {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 28px;
+        }
+
+        .progress-input {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .progress-input label {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .progress-input input {
+            padding: 10px;
+            font-size: 16px;
+            width: 80%; 
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .progress-input button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #ff7f50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .workout-table {
+            width: calc(100% - 40px);
+            margin-bottom: 20px;
+            border-collapse: collapse;
+        }
+
+        .workout-table th, .workout-table td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid black;
+        }
+
+        .workout-table th {
+            background-color: #ff7f50;
+            color: white;
+        }
+
+        .workout-table td {
+            background-color: #f3f3f3; 
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 40px;
+            left: 20px;
+            cursor: pointer;
+        }
+        .back-btn img {
+            width: 24px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="device-container">
+    <div class="device-screen">
+        <!-- Back Button -->
+        <a href="index.html" class="back-btn">
+            <img src="back-button.png" alt="Back" />
+        </a>
+
+        <!-- Progress Container -->
+        <div class="progress-container">
+            <!-- Header -->
+            <h2>Progress</h2>
+
+            <!-- Streak Header -->
+            <h2 class="streak-header" id="streakHeader">Streak: X Days</h2>
+
+            <!-- Progress Input Form -->
+            <div class="progress-input">
+                <label for="workoutProgress">Enter Workout Progress (minutes):</label>
+                <input type="number" id="workoutProgress" placeholder="Enter minutes" />
+                <button onclick="saveProgress()">Save Progress</button>
+            </div>
+
+            <!-- Workout History Table -->
+            <table class="workout-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Workout Name</th>
+                        <th>Exercise Time (minutes)</th>
+                    </tr>
+                </thead>
+                <tbody id="workoutTableBody">
+                    <!-- Rows will be dynamically added here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+
+function calculateStreak() {
+    const streak = localStorage.getItem('streak') || '0';
+    document.getElementById('streakHeader').textContent = `Streak: ${streak} Days`;
+}
+
+
+function saveProgress() {
+    const progress = document.getElementById('workoutProgress').value;
+    const date = new Date().toLocaleDateString();
+    const workoutName = `Workout on ${date}`;
+
+    localStorage.setItem(`${date}WorkoutName`, workoutName);
+    localStorage.setItem(date, JSON.stringify([{ time: parseInt(progress) }]));
+
+    document.getElementById('workoutProgress').value = '';
+    loadWorkoutHistory();
+}
+
+function getLastFiveDaysWorkouts() {
+    const workouts = [];
+    const today = new Date();
+
+    for (let i = 0; i < 5; i++) {
+        const currentDate = new Date(today);
+        currentDate.setDate(today.getDate() - i); 
+
+        const formattedDate = currentDate.toLocaleDateString();
+        const workoutName = localStorage.getItem(`${formattedDate}WorkoutName`) || `${formattedDate} Workout`;
+        
+        const exercises = JSON.parse(localStorage.getItem(formattedDate)) || [];
+        
+        let totalMinutes = exercises.reduce((total, exercise) => {
+            if (exercise.time) {
+                return total + exercise.time;
+            }
+            return total;
+        }, 0);
+
+        workouts.push({
+            date: formattedDate,
+            workoutName: workoutName,
+            exerciseTime: totalMinutes
+        });
+    }
+
+    return workouts;
+}
+
+function loadWorkoutHistory() {
+    const workoutTableBody = document.getElementById('workoutTableBody');
+
+    const workoutHistory = getLastFiveDaysWorkouts();
+
+    const sortedWorkouts = workoutHistory.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+
+    workoutTableBody.innerHTML = '';
+
+    sortedWorkouts.forEach(workout => {
+        const newRow = `
+          <tr>
+              <td>${workout.date}</td>
+              <td><a href="workout.html" onclick="saveSelectedDate('${workout.date}')">${workout.workoutName}</a></td>
+              <td>${workout.exerciseTime}</td>
+          </tr>`;
+        workoutTableBody.insertAdjacentHTML('beforeend', newRow);
+    });
+}
+
+function saveSelectedDate(date) {
+    localStorage.setItem('selectedDate', date);
+    localStorage.setItem('cameFromProgress', 'true');
+}
+
+window.onload = function() {
+    calculateStreak();
+    loadWorkoutHistory();
+};
+</script>
+
+</body>
+</html>
